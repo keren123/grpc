@@ -185,7 +185,7 @@ class JavaLanguage:
     return {}
 
   def unimplemented_test_cases(self):
-    return _SKIP_COMPRESSION
+    return []
 
   def unimplemented_test_cases_server(self):
     return _SKIP_COMPRESSION
@@ -210,7 +210,7 @@ class JavaOkHttpClient:
     return {}
 
   def unimplemented_test_cases(self):
-    return _SKIP_COMPRESSION + _SKIP_DATA_FRAME_PADDING
+    return _SKIP_DATA_FRAME_PADDING
 
   def __str__(self):
     return 'javaokhttp'
@@ -731,7 +731,7 @@ def cloud_to_cloud_jobspec(language, test_case, server_name, server_host,
     if manual_cmd_log is not None:
       if manual_cmd_log == []:
         manual_cmd_log.append('echo "Testing ${docker_image:=%s}"' % docker_image)
-      manual_cmd_log.append(manual_cmdline(cmdline, docker_iamge))
+      manual_cmd_log.append(manual_cmdline(cmdline, docker_image))
     cwd = None
 
   test_job = jobset.JobSpec(
@@ -793,7 +793,7 @@ def server_jobspec(language, docker_image, insecure=False, manual_cmd_log=None):
   if manual_cmd_log is not None:
       if manual_cmd_log == []:
         manual_cmd_log.append('echo "Testing ${docker_image:=%s}"' % docker_image)
-      manual_cmd_log.append(manual_cmdline(docker_cmdline, docker_iamge))
+      manual_cmd_log.append(manual_cmdline(docker_cmdline, docker_image))
   server_job = jobset.JobSpec(
           cmdline=docker_cmdline,
           environ=environ,

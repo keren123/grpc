@@ -28,6 +28,7 @@
 #include "src/core/lib/channel/channel_stack.h"
 #include "src/core/lib/channel/connected_channel.h"
 #include "src/core/lib/channel/handshaker_registry.h"
+#include "src/core/lib/debug/stats.h"
 #include "src/core/lib/debug/trace.h"
 #include "src/core/lib/http/parser.h"
 #include "src/core/lib/iomgr/combiner.h"
@@ -36,6 +37,7 @@
 #include "src/core/lib/iomgr/resource_quota.h"
 #include "src/core/lib/profiling/timers.h"
 #include "src/core/lib/slice/slice_internal.h"
+#include "src/core/lib/surface/alarm_internal.h"
 #include "src/core/lib/surface/api_trace.h"
 #include "src/core/lib/surface/call.h"
 #include "src/core/lib/surface/channel_init.h"
@@ -117,6 +119,7 @@ void grpc_init(void) {
   gpr_mu_lock(&g_init_mu);
   if (++g_initializations == 1) {
     gpr_time_init();
+    grpc_stats_init();
     grpc_slice_intern_init();
     grpc_mdctx_global_init();
     grpc_channel_init_init();
@@ -135,6 +138,7 @@ void grpc_init(void) {
     grpc_register_tracer(&grpc_call_error_trace);
 #ifndef NDEBUG
     grpc_register_tracer(&grpc_trace_pending_tags);
+    grpc_register_tracer(&grpc_trace_alarm_refcount);
     grpc_register_tracer(&grpc_trace_cq_refcount);
     grpc_register_tracer(&grpc_trace_closure);
     grpc_register_tracer(&grpc_trace_error_refcount);
@@ -184,6 +188,7 @@ void grpc_shutdown(void) {
     grpc_mdctx_global_shutdown(&exec_ctx);
     grpc_handshaker_factory_registry_shutdown(&exec_ctx);
     grpc_slice_intern_shutdown();
+    grpc_stats_shutdown();
   }
   gpr_mu_unlock(&g_init_mu);
   grpc_exec_ctx_finish(&exec_ctx);
