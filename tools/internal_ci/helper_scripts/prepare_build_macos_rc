@@ -55,6 +55,9 @@ rvm osx-ssl-certs status all
 rvm osx-ssl-certs update all
 set -ex
 
+# Reduce TIME_WAIT timeout to 3s to prevent port exhaustion
+sudo sysctl -w net.inet.tcp.msl=3000
+
 # cocoapods
 export LANG=en_US.UTF-8
 pod repo update  # needed by python
