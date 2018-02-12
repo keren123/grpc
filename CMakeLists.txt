@@ -213,6 +213,7 @@ add_dependencies(buildtests_c algorithm_test)
 add_dependencies(buildtests_c alloc_test)
 add_dependencies(buildtests_c alpn_test)
 add_dependencies(buildtests_c arena_test)
+add_dependencies(buildtests_c avl_test)
 add_dependencies(buildtests_c bad_server_response_test)
 add_dependencies(buildtests_c bin_decoder_test)
 add_dependencies(buildtests_c bin_encoder_test)
@@ -221,6 +222,7 @@ add_dependencies(buildtests_c channel_create_test)
 add_dependencies(buildtests_c chttp2_hpack_encoder_test)
 add_dependencies(buildtests_c chttp2_stream_map_test)
 add_dependencies(buildtests_c chttp2_varint_test)
+add_dependencies(buildtests_c cmdline_test)
 add_dependencies(buildtests_c combiner_test)
 add_dependencies(buildtests_c compression_test)
 add_dependencies(buildtests_c concurrent_connectivity_test)
@@ -257,8 +259,6 @@ endif()
 if(_gRPC_PLATFORM_LINUX OR _gRPC_PLATFORM_MAC OR _gRPC_PLATFORM_POSIX)
 add_dependencies(buildtests_c goaway_server_test)
 endif()
-add_dependencies(buildtests_c gpr_avl_test)
-add_dependencies(buildtests_c gpr_cmdline_test)
 add_dependencies(buildtests_c gpr_cpu_test)
 add_dependencies(buildtests_c gpr_env_test)
 add_dependencies(buildtests_c gpr_host_port_test)
@@ -564,6 +564,7 @@ endif()
 add_dependencies(buildtests_cxx memory_test)
 add_dependencies(buildtests_cxx metrics_client)
 add_dependencies(buildtests_cxx mock_test)
+add_dependencies(buildtests_cxx nonblocking_test)
 add_dependencies(buildtests_cxx noop-benchmark)
 add_dependencies(buildtests_cxx orphanable_test)
 add_dependencies(buildtests_cxx proto_server_reflection_test)
@@ -628,8 +629,6 @@ add_library(gpr
   src/core/lib/gpr/alloc.cc
   src/core/lib/gpr/arena.cc
   src/core/lib/gpr/atm.cc
-  src/core/lib/gpr/avl.cc
-  src/core/lib/gpr/cmdline.cc
   src/core/lib/gpr/cpu_iphone.cc
   src/core/lib/gpr/cpu_linux.cc
   src/core/lib/gpr/cpu_posix.cc
@@ -650,8 +649,6 @@ add_library(gpr
   src/core/lib/gpr/string_posix.cc
   src/core/lib/gpr/string_util_windows.cc
   src/core/lib/gpr/string_windows.cc
-  src/core/lib/gpr/subprocess_posix.cc
-  src/core/lib/gpr/subprocess_windows.cc
   src/core/lib/gpr/sync.cc
   src/core/lib/gpr/sync_posix.cc
   src/core/lib/gpr/sync_windows.cc
@@ -704,15 +701,11 @@ foreach(_hdr
   include/grpc/support/atm_gcc_atomic.h
   include/grpc/support/atm_gcc_sync.h
   include/grpc/support/atm_windows.h
-  include/grpc/support/avl.h
-  include/grpc/support/cmdline.h
   include/grpc/support/cpu.h
-  include/grpc/support/host_port.h
   include/grpc/support/log.h
   include/grpc/support/log_windows.h
   include/grpc/support/port_platform.h
   include/grpc/support/string_util.h
-  include/grpc/support/subprocess.h
   include/grpc/support/sync.h
   include/grpc/support/sync_custom.h
   include/grpc/support/sync_generic.h
@@ -720,11 +713,6 @@ foreach(_hdr
   include/grpc/support/sync_windows.h
   include/grpc/support/thd.h
   include/grpc/support/time.h
-  include/grpc/support/tls.h
-  include/grpc/support/tls_gcc.h
-  include/grpc/support/tls_msvc.h
-  include/grpc/support/tls_pthread.h
-  include/grpc/support/useful.h
   include/grpc/impl/codegen/atm.h
   include/grpc/impl/codegen/atm_gcc_atomic.h
   include/grpc/impl/codegen/atm_gcc_sync.h
@@ -794,6 +782,7 @@ endif (gRPC_BUILD_TESTS)
 
 add_library(grpc
   src/core/lib/surface/init.cc
+  src/core/lib/avl/avl.cc
   src/core/lib/backoff/backoff.cc
   src/core/lib/channel/channel_args.cc
   src/core/lib/channel/channel_stack.cc
@@ -1003,7 +992,6 @@ add_library(grpc
   src/core/ext/filters/client_channel/proxy_mapper.cc
   src/core/ext/filters/client_channel/proxy_mapper_registry.cc
   src/core/ext/filters/client_channel/resolver.cc
-  src/core/ext/filters/client_channel/resolver_factory.cc
   src/core/ext/filters/client_channel/resolver_registry.cc
   src/core/ext/filters/client_channel/retry_throttle.cc
   src/core/ext/filters/client_channel/subchannel.cc
@@ -1134,6 +1122,7 @@ endif()
 
 add_library(grpc_cronet
   src/core/lib/surface/init.cc
+  src/core/lib/avl/avl.cc
   src/core/lib/backoff/backoff.cc
   src/core/lib/channel/channel_args.cc
   src/core/lib/channel/channel_stack.cc
@@ -1314,7 +1303,6 @@ add_library(grpc_cronet
   src/core/ext/filters/client_channel/proxy_mapper.cc
   src/core/ext/filters/client_channel/proxy_mapper_registry.cc
   src/core/ext/filters/client_channel/resolver.cc
-  src/core/ext/filters/client_channel/resolver_factory.cc
   src/core/ext/filters/client_channel/resolver_registry.cc
   src/core/ext/filters/client_channel/retry_throttle.cc
   src/core/ext/filters/client_channel/subchannel.cc
@@ -1455,8 +1443,12 @@ add_library(grpc_test_util
   test/core/util/port_isolated_runtime_environment.cc
   test/core/util/port_server_client.cc
   test/core/util/slice_splitter.cc
+  test/core/util/subprocess_posix.cc
+  test/core/util/subprocess_windows.cc
   test/core/util/tracer_util.cc
   test/core/util/trickle_endpoint.cc
+  test/core/util/cmdline.cc
+  src/core/lib/avl/avl.cc
   src/core/lib/backoff/backoff.cc
   src/core/lib/channel/channel_args.cc
   src/core/lib/channel/channel_stack.cc
@@ -1606,7 +1598,6 @@ add_library(grpc_test_util
   src/core/ext/filters/client_channel/proxy_mapper.cc
   src/core/ext/filters/client_channel/proxy_mapper_registry.cc
   src/core/ext/filters/client_channel/resolver.cc
-  src/core/ext/filters/client_channel/resolver_factory.cc
   src/core/ext/filters/client_channel/resolver_registry.cc
   src/core/ext/filters/client_channel/retry_throttle.cc
   src/core/ext/filters/client_channel/subchannel.cc
@@ -1673,14 +1664,23 @@ target_link_libraries(grpc_test_util
 )
 
 foreach(_hdr
-  include/grpc/impl/codegen/byte_buffer.h
-  include/grpc/impl/codegen/byte_buffer_reader.h
-  include/grpc/impl/codegen/compression_types.h
-  include/grpc/impl/codegen/connectivity_state.h
-  include/grpc/impl/codegen/grpc_types.h
-  include/grpc/impl/codegen/propagation_bits.h
-  include/grpc/impl/codegen/slice.h
-  include/grpc/impl/codegen/status.h
+  include/grpc/support/alloc.h
+  include/grpc/support/atm.h
+  include/grpc/support/atm_gcc_atomic.h
+  include/grpc/support/atm_gcc_sync.h
+  include/grpc/support/atm_windows.h
+  include/grpc/support/cpu.h
+  include/grpc/support/log.h
+  include/grpc/support/log_windows.h
+  include/grpc/support/port_platform.h
+  include/grpc/support/string_util.h
+  include/grpc/support/sync.h
+  include/grpc/support/sync_custom.h
+  include/grpc/support/sync_generic.h
+  include/grpc/support/sync_posix.h
+  include/grpc/support/sync_windows.h
+  include/grpc/support/thd.h
+  include/grpc/support/time.h
   include/grpc/impl/codegen/atm.h
   include/grpc/impl/codegen/atm_gcc_atomic.h
   include/grpc/impl/codegen/atm_gcc_sync.h
@@ -1694,6 +1694,14 @@ foreach(_hdr
   include/grpc/impl/codegen/sync_generic.h
   include/grpc/impl/codegen/sync_posix.h
   include/grpc/impl/codegen/sync_windows.h
+  include/grpc/impl/codegen/byte_buffer.h
+  include/grpc/impl/codegen/byte_buffer_reader.h
+  include/grpc/impl/codegen/compression_types.h
+  include/grpc/impl/codegen/connectivity_state.h
+  include/grpc/impl/codegen/grpc_types.h
+  include/grpc/impl/codegen/propagation_bits.h
+  include/grpc/impl/codegen/slice.h
+  include/grpc/impl/codegen/status.h
 )
   string(REPLACE "include/" "" _path ${_hdr})
   get_filename_component(_path ${_path} PATH)
@@ -1722,8 +1730,12 @@ add_library(grpc_test_util_unsecure
   test/core/util/port_isolated_runtime_environment.cc
   test/core/util/port_server_client.cc
   test/core/util/slice_splitter.cc
+  test/core/util/subprocess_posix.cc
+  test/core/util/subprocess_windows.cc
   test/core/util/tracer_util.cc
   test/core/util/trickle_endpoint.cc
+  test/core/util/cmdline.cc
+  src/core/lib/avl/avl.cc
   src/core/lib/backoff/backoff.cc
   src/core/lib/channel/channel_args.cc
   src/core/lib/channel/channel_stack.cc
@@ -1873,7 +1885,6 @@ add_library(grpc_test_util_unsecure
   src/core/ext/filters/client_channel/proxy_mapper.cc
   src/core/ext/filters/client_channel/proxy_mapper_registry.cc
   src/core/ext/filters/client_channel/resolver.cc
-  src/core/ext/filters/client_channel/resolver_factory.cc
   src/core/ext/filters/client_channel/resolver_registry.cc
   src/core/ext/filters/client_channel/retry_throttle.cc
   src/core/ext/filters/client_channel/subchannel.cc
@@ -1940,14 +1951,23 @@ target_link_libraries(grpc_test_util_unsecure
 )
 
 foreach(_hdr
-  include/grpc/impl/codegen/byte_buffer.h
-  include/grpc/impl/codegen/byte_buffer_reader.h
-  include/grpc/impl/codegen/compression_types.h
-  include/grpc/impl/codegen/connectivity_state.h
-  include/grpc/impl/codegen/grpc_types.h
-  include/grpc/impl/codegen/propagation_bits.h
-  include/grpc/impl/codegen/slice.h
-  include/grpc/impl/codegen/status.h
+  include/grpc/support/alloc.h
+  include/grpc/support/atm.h
+  include/grpc/support/atm_gcc_atomic.h
+  include/grpc/support/atm_gcc_sync.h
+  include/grpc/support/atm_windows.h
+  include/grpc/support/cpu.h
+  include/grpc/support/log.h
+  include/grpc/support/log_windows.h
+  include/grpc/support/port_platform.h
+  include/grpc/support/string_util.h
+  include/grpc/support/sync.h
+  include/grpc/support/sync_custom.h
+  include/grpc/support/sync_generic.h
+  include/grpc/support/sync_posix.h
+  include/grpc/support/sync_windows.h
+  include/grpc/support/thd.h
+  include/grpc/support/time.h
   include/grpc/impl/codegen/atm.h
   include/grpc/impl/codegen/atm_gcc_atomic.h
   include/grpc/impl/codegen/atm_gcc_sync.h
@@ -1961,6 +1981,14 @@ foreach(_hdr
   include/grpc/impl/codegen/sync_generic.h
   include/grpc/impl/codegen/sync_posix.h
   include/grpc/impl/codegen/sync_windows.h
+  include/grpc/impl/codegen/byte_buffer.h
+  include/grpc/impl/codegen/byte_buffer_reader.h
+  include/grpc/impl/codegen/compression_types.h
+  include/grpc/impl/codegen/connectivity_state.h
+  include/grpc/impl/codegen/grpc_types.h
+  include/grpc/impl/codegen/propagation_bits.h
+  include/grpc/impl/codegen/slice.h
+  include/grpc/impl/codegen/status.h
 )
   string(REPLACE "include/" "" _path ${_hdr})
   get_filename_component(_path ${_path} PATH)
@@ -1974,6 +2002,7 @@ endif (gRPC_BUILD_TESTS)
 add_library(grpc_unsecure
   src/core/lib/surface/init.cc
   src/core/lib/surface/init_unsecure.cc
+  src/core/lib/avl/avl.cc
   src/core/lib/backoff/backoff.cc
   src/core/lib/channel/channel_args.cc
   src/core/lib/channel/channel_stack.cc
@@ -2156,7 +2185,6 @@ add_library(grpc_unsecure
   src/core/ext/filters/client_channel/proxy_mapper.cc
   src/core/ext/filters/client_channel/proxy_mapper_registry.cc
   src/core/ext/filters/client_channel/resolver.cc
-  src/core/ext/filters/client_channel/resolver_factory.cc
   src/core/ext/filters/client_channel/resolver_registry.cc
   src/core/ext/filters/client_channel/retry_throttle.cc
   src/core/ext/filters/client_channel/subchannel.cc
@@ -2487,15 +2515,11 @@ foreach(_hdr
   include/grpc/support/atm_gcc_atomic.h
   include/grpc/support/atm_gcc_sync.h
   include/grpc/support/atm_windows.h
-  include/grpc/support/avl.h
-  include/grpc/support/cmdline.h
   include/grpc/support/cpu.h
-  include/grpc/support/host_port.h
   include/grpc/support/log.h
   include/grpc/support/log_windows.h
   include/grpc/support/port_platform.h
   include/grpc/support/string_util.h
-  include/grpc/support/subprocess.h
   include/grpc/support/sync.h
   include/grpc/support/sync_custom.h
   include/grpc/support/sync_generic.h
@@ -2503,11 +2527,6 @@ foreach(_hdr
   include/grpc/support/sync_windows.h
   include/grpc/support/thd.h
   include/grpc/support/time.h
-  include/grpc/support/tls.h
-  include/grpc/support/tls_gcc.h
-  include/grpc/support/tls_msvc.h
-  include/grpc/support/tls_pthread.h
-  include/grpc/support/useful.h
   include/grpc/impl/codegen/atm.h
   include/grpc/impl/codegen/atm_gcc_atomic.h
   include/grpc/impl/codegen/atm_gcc_sync.h
@@ -2705,6 +2724,7 @@ add_library(grpc++_cronet
   src/core/ext/transport/chttp2/transport/stream_map.cc
   src/core/ext/transport/chttp2/transport/varint.cc
   src/core/ext/transport/chttp2/transport/writing.cc
+  src/core/lib/avl/avl.cc
   src/core/lib/backoff/backoff.cc
   src/core/lib/channel/channel_args.cc
   src/core/lib/channel/channel_stack.cc
@@ -2859,7 +2879,6 @@ add_library(grpc++_cronet
   src/core/ext/filters/client_channel/proxy_mapper.cc
   src/core/ext/filters/client_channel/proxy_mapper_registry.cc
   src/core/ext/filters/client_channel/resolver.cc
-  src/core/ext/filters/client_channel/resolver_factory.cc
   src/core/ext/filters/client_channel/resolver_registry.cc
   src/core/ext/filters/client_channel/retry_throttle.cc
   src/core/ext/filters/client_channel/subchannel.cc
@@ -2960,15 +2979,11 @@ foreach(_hdr
   include/grpc/support/atm_gcc_atomic.h
   include/grpc/support/atm_gcc_sync.h
   include/grpc/support/atm_windows.h
-  include/grpc/support/avl.h
-  include/grpc/support/cmdline.h
   include/grpc/support/cpu.h
-  include/grpc/support/host_port.h
   include/grpc/support/log.h
   include/grpc/support/log_windows.h
   include/grpc/support/port_platform.h
   include/grpc/support/string_util.h
-  include/grpc/support/subprocess.h
   include/grpc/support/sync.h
   include/grpc/support/sync_custom.h
   include/grpc/support/sync_generic.h
@@ -2976,11 +2991,6 @@ foreach(_hdr
   include/grpc/support/sync_windows.h
   include/grpc/support/thd.h
   include/grpc/support/time.h
-  include/grpc/support/tls.h
-  include/grpc/support/tls_gcc.h
-  include/grpc/support/tls_msvc.h
-  include/grpc/support/tls_pthread.h
-  include/grpc/support/useful.h
   include/grpc/impl/codegen/atm.h
   include/grpc/impl/codegen/atm_gcc_atomic.h
   include/grpc/impl/codegen/atm_gcc_sync.h
@@ -3690,15 +3700,11 @@ foreach(_hdr
   include/grpc/support/atm_gcc_atomic.h
   include/grpc/support/atm_gcc_sync.h
   include/grpc/support/atm_windows.h
-  include/grpc/support/avl.h
-  include/grpc/support/cmdline.h
   include/grpc/support/cpu.h
-  include/grpc/support/host_port.h
   include/grpc/support/log.h
   include/grpc/support/log_windows.h
   include/grpc/support/port_platform.h
   include/grpc/support/string_util.h
-  include/grpc/support/subprocess.h
   include/grpc/support/sync.h
   include/grpc/support/sync_custom.h
   include/grpc/support/sync_generic.h
@@ -3706,11 +3712,6 @@ foreach(_hdr
   include/grpc/support/sync_windows.h
   include/grpc/support/thd.h
   include/grpc/support/time.h
-  include/grpc/support/tls.h
-  include/grpc/support/tls_gcc.h
-  include/grpc/support/tls_msvc.h
-  include/grpc/support/tls_pthread.h
-  include/grpc/support/useful.h
   include/grpc/impl/codegen/atm.h
   include/grpc/impl/codegen/atm_gcc_atomic.h
   include/grpc/impl/codegen/atm_gcc_sync.h
@@ -4829,6 +4830,32 @@ target_link_libraries(arena_test
 endif (gRPC_BUILD_TESTS)
 if (gRPC_BUILD_TESTS)
 
+add_executable(avl_test
+  test/core/avl/avl_test.cc
+)
+
+
+target_include_directories(avl_test
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+  PRIVATE ${_gRPC_SSL_INCLUDE_DIR}
+  PRIVATE ${_gRPC_PROTOBUF_INCLUDE_DIR}
+  PRIVATE ${_gRPC_ZLIB_INCLUDE_DIR}
+  PRIVATE ${_gRPC_BENCHMARK_INCLUDE_DIR}
+  PRIVATE ${_gRPC_CARES_INCLUDE_DIR}
+  PRIVATE ${_gRPC_GFLAGS_INCLUDE_DIR}
+)
+
+target_link_libraries(avl_test
+  ${_gRPC_ALLTARGETS_LIBRARIES}
+  gpr_test_util
+  gpr
+  grpc
+)
+
+endif (gRPC_BUILD_TESTS)
+if (gRPC_BUILD_TESTS)
+
 add_executable(bad_server_response_test
   test/core/end2end/bad_server_response_test.cc
 )
@@ -5069,6 +5096,32 @@ target_link_libraries(chttp2_varint_test
   grpc
   gpr_test_util
   gpr
+)
+
+endif (gRPC_BUILD_TESTS)
+if (gRPC_BUILD_TESTS)
+
+add_executable(cmdline_test
+  test/core/util/cmdline_test.cc
+)
+
+
+target_include_directories(cmdline_test
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+  PRIVATE ${_gRPC_SSL_INCLUDE_DIR}
+  PRIVATE ${_gRPC_PROTOBUF_INCLUDE_DIR}
+  PRIVATE ${_gRPC_ZLIB_INCLUDE_DIR}
+  PRIVATE ${_gRPC_BENCHMARK_INCLUDE_DIR}
+  PRIVATE ${_gRPC_CARES_INCLUDE_DIR}
+  PRIVATE ${_gRPC_GFLAGS_INCLUDE_DIR}
+)
+
+target_link_libraries(cmdline_test
+  ${_gRPC_ALLTARGETS_LIBRARIES}
+  gpr
+  gpr_test_util
+  grpc_test_util
 )
 
 endif (gRPC_BUILD_TESTS)
@@ -5630,56 +5683,6 @@ endif()
 endif (gRPC_BUILD_TESTS)
 if (gRPC_BUILD_TESTS)
 
-add_executable(gpr_avl_test
-  test/core/gpr/avl_test.cc
-)
-
-
-target_include_directories(gpr_avl_test
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-  PRIVATE ${_gRPC_SSL_INCLUDE_DIR}
-  PRIVATE ${_gRPC_PROTOBUF_INCLUDE_DIR}
-  PRIVATE ${_gRPC_ZLIB_INCLUDE_DIR}
-  PRIVATE ${_gRPC_BENCHMARK_INCLUDE_DIR}
-  PRIVATE ${_gRPC_CARES_INCLUDE_DIR}
-  PRIVATE ${_gRPC_GFLAGS_INCLUDE_DIR}
-)
-
-target_link_libraries(gpr_avl_test
-  ${_gRPC_ALLTARGETS_LIBRARIES}
-  gpr_test_util
-  gpr
-)
-
-endif (gRPC_BUILD_TESTS)
-if (gRPC_BUILD_TESTS)
-
-add_executable(gpr_cmdline_test
-  test/core/gpr/cmdline_test.cc
-)
-
-
-target_include_directories(gpr_cmdline_test
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-  PRIVATE ${_gRPC_SSL_INCLUDE_DIR}
-  PRIVATE ${_gRPC_PROTOBUF_INCLUDE_DIR}
-  PRIVATE ${_gRPC_ZLIB_INCLUDE_DIR}
-  PRIVATE ${_gRPC_BENCHMARK_INCLUDE_DIR}
-  PRIVATE ${_gRPC_CARES_INCLUDE_DIR}
-  PRIVATE ${_gRPC_GFLAGS_INCLUDE_DIR}
-)
-
-target_link_libraries(gpr_cmdline_test
-  ${_gRPC_ALLTARGETS_LIBRARIES}
-  gpr_test_util
-  gpr
-)
-
-endif (gRPC_BUILD_TESTS)
-if (gRPC_BUILD_TESTS)
-
 add_executable(gpr_cpu_test
   test/core/gpr/cpu_test.cc
 )
@@ -6222,6 +6225,7 @@ endif (gRPC_BUILD_TESTS)
 
 add_executable(grpc_create_jwt
   test/core/security/create_jwt.cc
+  test/core/util/cmdline.cc
 )
 
 
@@ -6392,6 +6396,7 @@ endif (gRPC_BUILD_TESTS)
 
 add_executable(grpc_print_google_default_creds_token
   test/core/security/print_google_default_creds_token.cc
+  test/core/util/cmdline.cc
 )
 
 
@@ -6478,6 +6483,7 @@ endif (gRPC_BUILD_TESTS)
 
 add_executable(grpc_verify_jwt
   test/core/security/verify_jwt.cc
+  test/core/util/cmdline.cc
 )
 
 
@@ -6864,7 +6870,9 @@ target_include_directories(json_rewrite
 
 target_link_libraries(json_rewrite
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  grpc_test_util
   grpc
+  gpr_test_util
   gpr
 )
 
@@ -10873,6 +10881,44 @@ target_include_directories(mock_test
 )
 
 target_link_libraries(mock_test
+  ${_gRPC_PROTOBUF_LIBRARIES}
+  ${_gRPC_ALLTARGETS_LIBRARIES}
+  grpc++_test_util
+  grpc_test_util
+  grpc++
+  grpc
+  gpr_test_util
+  gpr
+  ${_gRPC_GFLAGS_LIBRARIES}
+)
+
+endif (gRPC_BUILD_TESTS)
+if (gRPC_BUILD_TESTS)
+
+add_executable(nonblocking_test
+  test/cpp/end2end/nonblocking_test.cc
+  third_party/googletest/googletest/src/gtest-all.cc
+  third_party/googletest/googlemock/src/gmock-all.cc
+)
+
+
+target_include_directories(nonblocking_test
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+  PRIVATE ${_gRPC_SSL_INCLUDE_DIR}
+  PRIVATE ${_gRPC_PROTOBUF_INCLUDE_DIR}
+  PRIVATE ${_gRPC_ZLIB_INCLUDE_DIR}
+  PRIVATE ${_gRPC_BENCHMARK_INCLUDE_DIR}
+  PRIVATE ${_gRPC_CARES_INCLUDE_DIR}
+  PRIVATE ${_gRPC_GFLAGS_INCLUDE_DIR}
+  PRIVATE third_party/googletest/googletest/include
+  PRIVATE third_party/googletest/googletest
+  PRIVATE third_party/googletest/googlemock/include
+  PRIVATE third_party/googletest/googlemock
+  PRIVATE ${_gRPC_PROTO_GENS_DIR}
+)
+
+target_link_libraries(nonblocking_test
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
   grpc++_test_util
