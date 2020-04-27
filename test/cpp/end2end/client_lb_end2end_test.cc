@@ -241,7 +241,7 @@ class ClientLbEnd2endTest : public ::testing::Test {
     servers_.clear();
     creds_.reset();
     grpc_shutdown_blocking();
-    grpc_maybe_wait_for_async_shutdown();
+    grpc_wait_for_async_shutdown();
   }
 
   void CreateServers(size_t num_servers,
